@@ -33,14 +33,11 @@
       </div>
       <div class="row">
         <div class="col-md-12">
-          <div ng-repeat="singleframe in frameslist">
-            <a class="media-left" href="#">
-              <img data-ng-src="{{singleframe.dataUrl}}" width="30" height="30" />
-            </a>
-            <div class="media-body">
-              <h4 class="media-heading">Frame </h4>
-            </div>
-          </div>
+          <ul>
+            <li ng-repeat="singleframe in frameslist" ng-click="vm.activate(this)" class="list-group-item" ng-class="{true:'active', false:''}[$index==vm.active_frame]">
+              <img data-ng-src="{{singleframe.dataUrl}}" width="60" height="60" />
+            </li>
+          </ul>
         </div>
       </div>
     </div>

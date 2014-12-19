@@ -80,6 +80,7 @@ class PreviewEditor {
   
   public SetFrame(frame) {
     this.frame = frame;
+    this.drawAll();
   }
   
   public GetFrame() {
@@ -235,6 +236,12 @@ class FramesListController {
     this.frameslist.push(new Frame(this.led_count));
     this.active_frame = this.frameslist.length - 1;
     this.editorwindow.SetFrame(newframe);
+  }
+  
+  activate(a) {
+    this.saveFrame();
+    this.active_frame = a.$index;
+    this.editorwindow.SetFrame(this.frameslist[this.active_frame]);
   }
 }
 

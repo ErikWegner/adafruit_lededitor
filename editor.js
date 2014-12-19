@@ -60,6 +60,7 @@ var PreviewEditor = (function () {
     }
     PreviewEditor.prototype.SetFrame = function (frame) {
         this.frame = frame;
+        this.drawAll();
     };
     PreviewEditor.prototype.GetFrame = function () {
         this.frame.dataUrl = this.canvas.toDataURL();
@@ -176,6 +177,11 @@ var FramesListController = (function () {
         this.frameslist.push(new Frame(this.led_count));
         this.active_frame = this.frameslist.length - 1;
         this.editorwindow.SetFrame(newframe);
+    };
+    FramesListController.prototype.activate = function (a) {
+        this.saveFrame();
+        this.active_frame = a.$index;
+        this.editorwindow.SetFrame(this.frameslist[this.active_frame]);
     };
     // $inject annotation.
     // It provides $injector with information about dependencies to be injected into constructor
