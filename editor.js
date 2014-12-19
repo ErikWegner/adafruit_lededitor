@@ -16,8 +16,18 @@ var Frame = (function () {
         }
         this.colors = [];
         for (i = 0; i < l; i++) {
-            this.colors.push(oldcolors[(i + step + l) % l]);
+            this.colors.push(oldcolors[(i - step + l) % l]);
         }
+    };
+    Frame.prototype.Clone = function () {
+        var clone = new Frame(0);
+        var i;
+        var l = this.colors.length;
+        for (i = 0; i < l; i++) {
+            clone.colors.push(this.colors[i]);
+        }
+        clone.delay = this.delay;
+        return clone;
     };
     return Frame;
 })();
@@ -48,11 +58,15 @@ var PreviewEditor = (function () {
         this.InitEditor(o.editor);
         this.InitColorPicker(o.colorpicker);
     }
+    PreviewEditor.prototype.SetFrame = function (frame) {
+        this.frame = frame;
+    };
+    PreviewEditor.prototype.GetFrame = function () {
+        return this.frame;
+    };
     PreviewEditor.prototype.Rotate = function (step) {
         this.frame.Rotate(step);
-        for (var i = 0; i < this.o.led_count; i++) {
-            this.drawLed(i);
-        }
+        this.drawAll();
     };
     PreviewEditor.prototype.HighlightLed = function (led) {
         var old_active = this.active_led;
@@ -113,6 +127,11 @@ var PreviewEditor = (function () {
             this.HighlightLed(led_found);
         }
     };
+    PreviewEditor.prototype.drawAll = function () {
+        for (var i = 0; i < this.o.led_count; i++) {
+            this.drawLed(i);
+        }
+    };
     PreviewEditor.prototype.drawLed = function (led_index) {
         var c = this.centers[led_index];
         this.drawArc(this.canvasctx, c.x, c.y, this.led_radius, this.frame.colors[led_index] || this.led_off, led_index == this.active_led);
@@ -131,17 +150,15 @@ var PreviewEditor = (function () {
 var FramesListController = (function () {
     // dependencies are injected via AngularJS $injector
     // controller's name is registered in Application.ts and specified from ng-controller attribute in index.html
-    function FramesListController($scope, editorwindow) {
+    function FramesListController($scope, editorwindow, led_count) {
         this.$scope = $scope;
         this.editorwindow = editorwindow;
-        var f = new Frame(12);
-        f.delay = 15;
-        this.frameslist = $scope.frameslist = [f];
+        this.led_count = led_count;
+        this.active_frame = 0;
+        this.frameslist = $scope.frameslist = [new Frame(led_count)];
         // 'vm' stands for 'view model'. We're adding a reference to the controller to the scope
         // for its methods to be accessible from view / HTML
         $scope.vm = this;
-        // watching for events/changes in scope, which are caused by view/user input
-        // if you subscribe to scope or event with lifetime longer than this controller, make sure you unsubscribe.
     }
     FramesListController.prototype.rotateLeft = function () {
         this.editorwindow.Rotate(-1);
@@ -149,17 +166,28 @@ var FramesListController = (function () {
     FramesListController.prototype.rotateRight = function () {
         this.editorwindow.Rotate(1);
     };
+    FramesListController.prototype.saveFrame = function () {
+        this.frameslist[this.active_frame] = this.editorwindow.GetFrame();
+    };
+    FramesListController.prototype.saveAndNextFrame = function () {
+        this.saveFrame();
+        var newframe = this.frameslist[this.active_frame].Clone();
+        this.frameslist.push(new Frame(this.led_count));
+        this.active_frame = this.frameslist.length - 1;
+        this.editorwindow.SetFrame(newframe);
+    };
     // $inject annotation.
     // It provides $injector with information about dependencies to be injected into constructor
     // it is better to have it close to the constructor, because the parameters must match in count and type.
     // See http://docs.angularjs.org/guide/di
     FramesListController.$inject = [
         '$scope',
-        'editorwindow'
+        'editorwindow',
+        'led_count'
     ];
     return FramesListController;
 })();
-var eapp = angular.module('editorapp', []).factory('editorwindow', function () {
+var eapp = angular.module('editorapp', []).value('led_count', 12).factory('editorwindow', function () {
     var e;
     e = new PreviewEditor({ editor: "editor", colorpicker: "#colorpicker", led_count: 12 });
     return e;

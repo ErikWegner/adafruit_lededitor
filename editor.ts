@@ -29,6 +29,17 @@ class Frame {
       this.colors.push(oldcolors[(i - step + l) % l]);
     }
   }
+  
+  public Clone(): Frame {
+    var clone = new Frame(0);
+    var i;
+    var l = this.colors.length;
+    for (i = 0; i < l; i++) {
+      clone.colors.push(this.colors[i]);
+    }
+    clone.delay = this.delay;
+    return clone;
+  }
 }
 
 class EditorOptions {
@@ -66,11 +77,17 @@ class PreviewEditor {
     this.InitColorPicker(o.colorpicker);
   }
   
+  public SetFrame(frame) {
+    this.frame = frame;
+  }
+  
+  public GetFrame() {
+    return this.frame;
+  }
+  
   public Rotate(step: number) {
     this.frame.Rotate(step);
-    for (var i = 0; i < this.o.led_count; i++) {
-      this.drawLed(i);
-    }
+    this.drawAll();
   }
   
   public HighlightLed(led: number) {
@@ -145,6 +162,12 @@ class PreviewEditor {
     }
   }
   
+  private drawAll() {
+    for (var i = 0; i < this.o.led_count; i++) {
+      this.drawLed(i);
+    }
+  }
+  
   private drawLed(led_index: number) {
     var c = this.centers[led_index];
     this.drawArc(this.canvasctx, c.x, c.y, this.led_radius, this.frame.colors[led_index] || this.led_off, led_index == this.active_led);
@@ -171,27 +194,25 @@ class FramesListController {
   //https://github.com/tastejs/todomvc/blob/gh-pages/examples/typescript-angular/js/controllers/TodoCtrl.ts
   
   private frameslist: Array<Frame>
-  
+  private active_frame: number = 0;
   // $inject annotation.
   // It provides $injector with information about dependencies to be injected into constructor
   // it is better to have it close to the constructor, because the parameters must match in count and type.
   // See http://docs.angularjs.org/guide/di
   public static $inject = [
     '$scope',
-    'editorwindow'
+    'editorwindow',
+    'led_count'
   ];
   
 // dependencies are injected via AngularJS $injector
   // controller's name is registered in Application.ts and specified from ng-controller attribute in index.html
-  constructor(private $scope: IFramesListScope, private editorwindow: PreviewEditor) {
-    var f = new Frame(12);
-    f.delay = 15;
-    this.frameslist = $scope.frameslist = [f];
+  constructor(private $scope: IFramesListScope, private editorwindow: PreviewEditor, private led_count: number) {
+    this.frameslist = $scope.frameslist = [new Frame(led_count)];
     // 'vm' stands for 'view model'. We're adding a reference to the controller to the scope
     // for its methods to be accessible from view / HTML
     $scope.vm = this;
-    // watching for events/changes in scope, which are caused by view/user input
-    // if you subscribe to scope or event with lifetime longer than this controller, make sure you unsubscribe.
+    
   }
   
   rotateLeft() {
@@ -201,9 +222,21 @@ class FramesListController {
   rotateRight() {
     this.editorwindow.Rotate(1);
   }
+  
+  saveFrame() {
+    this.frameslist[this.active_frame] = this.editorwindow.GetFrame();
+  }
+  
+  saveAndNextFrame() {
+    this.saveFrame();
+    var newframe = this.frameslist[this.active_frame].Clone();
+    this.frameslist.push(new Frame(this.led_count));
+    this.active_frame = this.frameslist.length - 1;
+    this.editorwindow.SetFrame(newframe);
+  }
 }
 
-var eapp = angular.module('editorapp', []).factory('editorwindow', function() {
+var eapp = angular.module('editorapp', []).value('led_count', 12).factory('editorwindow', function() {
   var e;
   e = new PreviewEditor({ editor: "editor", colorpicker: "#colorpicker", led_count: 12});
   return e;
