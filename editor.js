@@ -62,6 +62,7 @@ var PreviewEditor = (function () {
         this.frame = frame;
     };
     PreviewEditor.prototype.GetFrame = function () {
+        this.frame.dataUrl = this.canvas.toDataURL();
         return this.frame;
     };
     PreviewEditor.prototype.Rotate = function (step) {

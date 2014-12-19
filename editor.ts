@@ -7,6 +7,7 @@ interface JQuery {
 class Frame {
   colors: Array<string>
   delay: number
+  dataUrl: string
   
   constructor(led_count: number) {
     this.colors = [];
@@ -82,6 +83,7 @@ class PreviewEditor {
   }
   
   public GetFrame() {
+    this.frame.dataUrl = this.canvas.toDataURL();
     return this.frame;
   }
   
