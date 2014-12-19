@@ -7,6 +7,15 @@ var Frame = (function () {
             this.colors.push(null);
         }
     }
+    Frame.prototype.toObj = function () {
+        var r = { colors: {}, delay: this.delay };
+        for (var i = 0; i < this.colors.length; i++) {
+            if (this.colors[i]) {
+                r.colors[i] = this.colors[i];
+            }
+        }
+        return r;
+    };
     Frame.prototype.Rotate = function (step) {
         var i;
         var l = this.colors.length;
@@ -152,8 +161,9 @@ var PreviewEditor = (function () {
 var FramesListController = (function () {
     // dependencies are injected via AngularJS $injector
     // controller's name is registered in Application.ts and specified from ng-controller attribute in index.html
-    function FramesListController($scope, editorwindow, led_count) {
+    function FramesListController($scope, ngDialog, editorwindow, led_count) {
         this.$scope = $scope;
+        this.ngDialog = ngDialog;
         this.editorwindow = editorwindow;
         this.led_count = led_count;
         this.active_frame = 0;
@@ -183,18 +193,37 @@ var FramesListController = (function () {
         this.active_frame = a.$index;
         this.editorwindow.SetFrame(this.frameslist[this.active_frame]);
     };
+    FramesListController.prototype.saveJSON = function () {
+        var exportdata = this.frameslistToJSON();
+        this.$scope["exportdata"] = exportdata;
+        var dlg = this.ngDialog.open({
+            template: 'savejson',
+            className: 'ngdialog-theme-default',
+            scope: this.$scope
+        });
+    };
+    FramesListController.prototype.frameslistToJSON = function () {
+        var r = {};
+        r.led_count = this.led_count;
+        r.frames = [];
+        for (var i in this.frameslist) {
+            r.frames.push(this.frameslist[i].toObj());
+        }
+        return JSON.stringify(r);
+    };
     // $inject annotation.
     // It provides $injector with information about dependencies to be injected into constructor
     // it is better to have it close to the constructor, because the parameters must match in count and type.
     // See http://docs.angularjs.org/guide/di
     FramesListController.$inject = [
         '$scope',
+        'ngDialog',
         'editorwindow',
         'led_count'
     ];
     return FramesListController;
 })();
-var eapp = angular.module('editorapp', []).value('led_count', 12).factory('editorwindow', function () {
+var eapp = angular.module('editorapp', ['ngDialog']).value('led_count', 12).factory('editorwindow', function () {
     var e;
     e = new PreviewEditor({ editor: "editor", colorpicker: "#colorpicker", led_count: 12 });
     return e;

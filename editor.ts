@@ -1,5 +1,7 @@
 /// <reference path="externals/definitelytyped/jquery/jquery.d.ts" />
 /// <reference path="externals/definitelytyped/angularjs/angular.d.ts" />
+declare var ngDialog: any;
+
 interface JQuery {
   colorpicker: (options: any) => JQuery;
 }
@@ -14,6 +16,16 @@ class Frame {
     for (var i = 0; i < led_count; i++) {
       this.colors.push(null);
     }
+  }
+  
+  public toObj() {
+    var r: any = {colors: {}, delay: this.delay}
+    for (var i = 0; i < this.colors.length; i++) {
+      if (this.colors[i]) {
+        r.colors[i] = this.colors[i];
+      }
+    }
+    return r;
   }
   
   public Rotate(step: number) {
@@ -204,13 +216,14 @@ class FramesListController {
   // See http://docs.angularjs.org/guide/di
   public static $inject = [
     '$scope',
+    'ngDialog',
     'editorwindow',
     'led_count'
   ];
   
 // dependencies are injected via AngularJS $injector
   // controller's name is registered in Application.ts and specified from ng-controller attribute in index.html
-  constructor(private $scope: IFramesListScope, private editorwindow: PreviewEditor, private led_count: number) {
+  constructor(private $scope: IFramesListScope, private ngDialog, private editorwindow: PreviewEditor, private led_count: number) {
     this.frameslist = $scope.frameslist = [new Frame(led_count)];
     // 'vm' stands for 'view model'. We're adding a reference to the controller to the scope
     // for its methods to be accessible from view / HTML
@@ -243,9 +256,30 @@ class FramesListController {
     this.active_frame = a.$index;
     this.editorwindow.SetFrame(this.frameslist[this.active_frame]);
   }
+  
+  saveJSON() {
+    var exportdata = this.frameslistToJSON()
+    this.$scope["exportdata"] = exportdata;
+    var dlg = this.ngDialog.open({ 
+      template: 'savejson',
+      className: 'ngdialog-theme-default',
+      scope: this.$scope
+    });
+  }
+  
+  frameslistToJSON() {
+    var r:any = {}
+    r.led_count = this.led_count;
+    r.frames = [];
+    for (var i in this.frameslist) {
+      r.frames.push(this.frameslist[i].toObj());
+    }
+    
+    return JSON.stringify(r);
+  }
 }
 
-var eapp = angular.module('editorapp', []).value('led_count', 12).factory('editorwindow', function() {
+var eapp = angular.module('editorapp', ['ngDialog']).value('led_count', 12).factory('editorwindow', function() {
   var e;
   e = new PreviewEditor({ editor: "editor", colorpicker: "#colorpicker", led_count: 12});
   return e;
