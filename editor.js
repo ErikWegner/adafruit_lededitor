@@ -42,8 +42,15 @@ var PreviewEditor = (function () {
             this.drawLed(led);
         }
     };
+    PreviewEditor.prototype.setActiveLedColor = function (htmlcolor) {
+        this.frame.colors[this.active_led] = htmlcolor;
+        this.drawLed(this.active_led);
+    };
+    PreviewEditor.prototype.PalettePick = function (e, htmlcolor) {
+        this.setActiveLedColor(htmlcolor);
+    };
     PreviewEditor.prototype.InitColorPicker = function (elementselector) {
-        $(elementselector).colorpicker({ defaultPalette: 'web' });
+        $(elementselector).colorpicker({ defaultPalette: 'web' }).on('change.color', $.proxy(this.PalettePick, this));
     };
     PreviewEditor.prototype.InitEditor = function (canvasid) {
         this.canvas = document.getElementById(canvasid);
@@ -88,7 +95,7 @@ var PreviewEditor = (function () {
     };
     PreviewEditor.prototype.drawLed = function (led_index) {
         var c = this.centers[led_index];
-        this.drawArc(this.canvasctx, c.x, c.y, this.led_radius, this.led_off, led_index == this.active_led);
+        this.drawArc(this.canvasctx, c.x, c.y, this.led_radius, this.frame.colors[led_index] || this.led_off, led_index == this.active_led);
     };
     PreviewEditor.prototype.drawArc = function (context, centerX, centerY, radius, color, is_active) {
         context.beginPath();

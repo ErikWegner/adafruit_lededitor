@@ -1,6 +1,6 @@
 /// <reference path="externals/definitelytyped/jquery/jquery.d.ts" />
 interface JQuery {
-  colorpicker: (options: any) => JQueryStatic;
+  colorpicker: (options: any) => JQuery;
 }
 
 class Frame {
@@ -60,8 +60,17 @@ class PreviewEditor {
     }
   }
   
+  public setActiveLedColor(htmlcolor: string) {
+    this.frame.colors[this.active_led] = htmlcolor;
+    this.drawLed(this.active_led);
+  }
+  
+  private PalettePick(e: JQueryEventObject, htmlcolor: string) {
+    this.setActiveLedColor(htmlcolor);
+  }
+  
   private InitColorPicker(elementselector) {
-    $(elementselector).colorpicker({defaultPalette:'web'});
+    $(elementselector).colorpicker({defaultPalette:'web'}).on('change.color', $.proxy(this.PalettePick, this));
   }
 
   private InitEditor(canvasid) {
@@ -115,7 +124,7 @@ class PreviewEditor {
   
   private drawLed(led_index: number) {
     var c = this.centers[led_index];
-    this.drawArc(this.canvasctx, c.x, c.y, this.led_radius, this.led_off, led_index == this.active_led);
+    this.drawArc(this.canvasctx, c.x, c.y, this.led_radius, this.frame.colors[led_index] || this.led_off, led_index == this.active_led);
   }
   
   private drawArc(context: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, color : any, is_active: boolean) {
