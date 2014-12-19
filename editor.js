@@ -1,4 +1,5 @@
 /// <reference path="externals/definitelytyped/jquery/jquery.d.ts" />
+/// <reference path="externals/definitelytyped/angularjs/angular.d.ts" />
 var Frame = (function () {
     function Frame(led_count) {
         this.colors = [];
@@ -108,6 +109,30 @@ var PreviewEditor = (function () {
     };
     return PreviewEditor;
 })();
+var FramesListController = (function () {
+    // dependencies are injected via AngularJS $injector
+    // controller's name is registered in Application.ts and specified from ng-controller attribute in index.html
+    function FramesListController($scope) {
+        this.$scope = $scope;
+        var f = new Frame(12);
+        f.delay = 15;
+        this.frameslist = $scope.frameslist = [f];
+        // 'vm' stands for 'view model'. We're adding a reference to the controller to the scope
+        // for its methods to be accessible from view / HTML
+        $scope.vm = this;
+        // watching for events/changes in scope, which are caused by view/user input
+        // if you subscribe to scope or event with lifetime longer than this controller, make sure you unsubscribe.
+    }
+    // $inject annotation.
+    // It provides $injector with information about dependencies to be injected into constructor
+    // it is better to have it close to the constructor, because the parameters must match in count and type.
+    // See http://docs.angularjs.org/guide/di
+    FramesListController.$inject = [
+        '$scope',
+    ];
+    return FramesListController;
+})();
+angular.module('editorapp', []).controller('FramesListController', FramesListController);
 $(function () {
     new PreviewEditor({ editor: "editor", colorpicker: "#colorpicker", led_count: 12 });
 });

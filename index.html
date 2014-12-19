@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="editorapp">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -23,12 +23,25 @@
         <div class="col-md-8"><canvas id="editor" width="300" height="300">C A N V A S</canvas></div>
         <div class="col-md-4"><div id="colorpicker" /></div>
       </div>
+      <div class="row">
+        <div class="col-md-12" ng-controller="FramesListController">
+          <div ng-repeat="singleframe in frameslist">
+            <a class="media-left" href="#">
+              Preview
+            </a>
+            <div class="media-body">
+              <h4 class="media-heading">Frame </h4>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="bower_components/angular/angular.min.js"></script>
     <script src="bower_components/jqueryui/jquery-ui.min.js"></script>
     <script src="bower_components/colorpicker/js/evol.colorpicker.min.js"></script>
     <script src="editor.js"></script>
