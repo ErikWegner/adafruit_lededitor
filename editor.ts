@@ -23,6 +23,10 @@ class EditorOptions {
 
 class Point {
   constructor(public x: number, public y: number) {}
+  
+  public hitByClick(clickx: number, clicky: number, radius: number): boolean {
+    return (Math.pow(clickx - this.x, 2) + Math.pow(clicky - this.y, 2)) <= Math.pow(radius, 2);
+  }
 }
 
 class PreviewEditor {
@@ -35,6 +39,8 @@ class PreviewEditor {
   led_radius = 20;
   led_border = 2;
   led_off = '#000000';
+  
+  active_led: number = 0;
 
   frame: Frame
   
@@ -42,6 +48,16 @@ class PreviewEditor {
     this.frame = new Frame(o.led_count);
     this.InitEditor(o.editor);
     this.InitColorPicker(o.colorpicker);
+  }
+  
+  public HighlightLed(led: number) {
+    var old_active = this.active_led;
+    this.active_led = led;
+    
+    if (old_active != led) {
+      this.drawLed(old_active);
+      this.drawLed(led);
+    }
   }
   
   private InitColorPicker(elementselector) {
@@ -67,18 +83,48 @@ class PreviewEditor {
         var x = Math.cos(winkel * Math.PI/ 180) * radius + centerX;
         var y = Math.sin(winkel * Math.PI / 180) * radius + centerY;
         this.centers.push(new Point(x, y));
-        this.drawArc(this.canvasctx, x, y, this.led_radius, this.led_off);
+        this.drawLed(i);
       }
     }
+    
+    this.InitEventHandler() ;
   }
 
-  private drawArc(context, centerX, centerY, radius, color) {
+  private InitEventHandler() {
+    jQuery(this.canvas).on('click', $.proxy(this.HandleClick, this));
+  }
+
+  private HandleClick(e: JQueryEventObject) {
+    var leftclick = e.button == 0;
+    var x = e.offsetX
+    var y = e.offsetY
+    var led_found = -1;
+    
+    if (leftclick) {
+      for (var ledi in this.centers) {
+        if (this.centers[ledi].hitByClick(x, y, this.led_radius)) {
+          led_found = ledi;
+        }
+      }
+    }
+    
+    if (led_found >= 0) {
+      this.HighlightLed(led_found);
+    }
+  }
+  
+  private drawLed(led_index: number) {
+    var c = this.centers[led_index];
+    this.drawArc(this.canvasctx, c.x, c.y, this.led_radius, this.led_off, led_index == this.active_led);
+  }
+  
+  private drawArc(context: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, color : any, is_active: boolean) {
     context.beginPath();
     context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
     context.fillStyle = color;
     context.fill();
     context.lineWidth = 2;
-    context.strokeStyle = '#000000';
+    context.strokeStyle = is_active ? '#0f0' : '#000';
     context.stroke();
   }
 
