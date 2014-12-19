@@ -1,0 +1,11 @@
+{
+  "name": "adafruit_lededitor",
+  "version": "1.0.0",
+  "description": "Visual editor for LED ring, builds a sketch for Arduino to run an animation",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Erik Wegner <erik.wegner@ewus.de>",
+  "license": "ISC"
+}

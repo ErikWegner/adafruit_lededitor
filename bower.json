@@ -1,0 +1,30 @@
+{
+  "name": "adafruit_lededitor",
+  "version": "1.0.0",
+  "authors": [
+    "Erik Wegner <erik.wegner@ewus.de>"
+  ],
+  "description": "d",
+  "main": "index.html",
+  "keywords": [
+    "Arduino",
+    "Adafruit",
+    "LED",
+    "Sketch"
+  ],
+  "license": "ISC",
+  "homepage": "http://ewus.de",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.3",
+    "bootstrap": "~3.3.1",
+    "angular": "~1.3.7"
+  }
+}
