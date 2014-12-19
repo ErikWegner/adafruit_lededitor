@@ -14,6 +14,21 @@ class Frame {
       this.colors.push(null);
     }
   }
+  
+  public Rotate(step: number) {
+    var i;
+    var l = this.colors.length;
+    var oldcolors = [];
+    // make a copy of all items
+    for (i = 0; i < l; i++) {
+      oldcolors.push(this.colors[i]);
+    }
+    this.colors = [];
+    // copy with an offset
+    for (i = 0; i < l; i++) {
+      this.colors.push(oldcolors[(i - step + l) % l]);
+    }
+  }
 }
 
 class EditorOptions {
@@ -45,10 +60,17 @@ class PreviewEditor {
 
   frame: Frame
   
-  constructor (o: EditorOptions) {
+  constructor (private o: EditorOptions) {
     this.frame = new Frame(o.led_count);
     this.InitEditor(o.editor);
     this.InitColorPicker(o.colorpicker);
+  }
+  
+  public Rotate(step: number) {
+    this.frame.Rotate(step);
+    for (var i = 0; i < this.o.led_count; i++) {
+      this.drawLed(i);
+    }
   }
   
   public HighlightLed(led: number) {
@@ -149,17 +171,19 @@ class FramesListController {
   //https://github.com/tastejs/todomvc/blob/gh-pages/examples/typescript-angular/js/controllers/TodoCtrl.ts
   
   private frameslist: Array<Frame>
+  
   // $inject annotation.
   // It provides $injector with information about dependencies to be injected into constructor
   // it is better to have it close to the constructor, because the parameters must match in count and type.
   // See http://docs.angularjs.org/guide/di
   public static $inject = [
     '$scope',
+    'editorwindow'
   ];
   
 // dependencies are injected via AngularJS $injector
   // controller's name is registered in Application.ts and specified from ng-controller attribute in index.html
-  constructor(private $scope: IFramesListScope) {
+  constructor(private $scope: IFramesListScope, private editorwindow: PreviewEditor) {
     var f = new Frame(12);
     f.delay = 15;
     this.frameslist = $scope.frameslist = [f];
@@ -169,10 +193,18 @@ class FramesListController {
     // watching for events/changes in scope, which are caused by view/user input
     // if you subscribe to scope or event with lifetime longer than this controller, make sure you unsubscribe.
   }
+  
+  rotateLeft() {
+    this.editorwindow.Rotate(-1);
+  }
+  
+  rotateRight() {
+    this.editorwindow.Rotate(1);
+  }
 }
 
-angular.module('editorapp', []).controller('FramesListController', FramesListController);
-
-$(function() {  
-  new PreviewEditor({ editor: "editor", colorpicker: "#colorpicker", led_count: 12});
-});
+var eapp = angular.module('editorapp', []).factory('editorwindow', function() {
+  var e;
+  e = new PreviewEditor({ editor: "editor", colorpicker: "#colorpicker", led_count: 12});
+  return e;
+}).controller('FramesListController', FramesListController);

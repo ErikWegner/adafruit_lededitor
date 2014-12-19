@@ -7,6 +7,18 @@ var Frame = (function () {
             this.colors.push(null);
         }
     }
+    Frame.prototype.Rotate = function (step) {
+        var i;
+        var l = this.colors.length;
+        var oldcolors = [];
+        for (i = 0; i < l; i++) {
+            oldcolors.push(this.colors[i]);
+        }
+        this.colors = [];
+        for (i = 0; i < l; i++) {
+            this.colors.push(oldcolors[(i + step + l) % l]);
+        }
+    };
     return Frame;
 })();
 var EditorOptions = (function () {
@@ -26,6 +38,7 @@ var Point = (function () {
 })();
 var PreviewEditor = (function () {
     function PreviewEditor(o) {
+        this.o = o;
         this.centers = [];
         this.led_radius = 20;
         this.led_border = 2;
@@ -35,6 +48,12 @@ var PreviewEditor = (function () {
         this.InitEditor(o.editor);
         this.InitColorPicker(o.colorpicker);
     }
+    PreviewEditor.prototype.Rotate = function (step) {
+        this.frame.Rotate(step);
+        for (var i = 0; i < this.o.led_count; i++) {
+            this.drawLed(i);
+        }
+    };
     PreviewEditor.prototype.HighlightLed = function (led) {
         var old_active = this.active_led;
         this.active_led = led;
@@ -112,8 +131,9 @@ var PreviewEditor = (function () {
 var FramesListController = (function () {
     // dependencies are injected via AngularJS $injector
     // controller's name is registered in Application.ts and specified from ng-controller attribute in index.html
-    function FramesListController($scope) {
+    function FramesListController($scope, editorwindow) {
         this.$scope = $scope;
+        this.editorwindow = editorwindow;
         var f = new Frame(12);
         f.delay = 15;
         this.frameslist = $scope.frameslist = [f];
@@ -123,16 +143,24 @@ var FramesListController = (function () {
         // watching for events/changes in scope, which are caused by view/user input
         // if you subscribe to scope or event with lifetime longer than this controller, make sure you unsubscribe.
     }
+    FramesListController.prototype.rotateLeft = function () {
+        this.editorwindow.Rotate(-1);
+    };
+    FramesListController.prototype.rotateRight = function () {
+        this.editorwindow.Rotate(1);
+    };
     // $inject annotation.
     // It provides $injector with information about dependencies to be injected into constructor
     // it is better to have it close to the constructor, because the parameters must match in count and type.
     // See http://docs.angularjs.org/guide/di
     FramesListController.$inject = [
         '$scope',
+        'editorwindow'
     ];
     return FramesListController;
 })();
-angular.module('editorapp', []).controller('FramesListController', FramesListController);
-$(function () {
-    new PreviewEditor({ editor: "editor", colorpicker: "#colorpicker", led_count: 12 });
-});
+var eapp = angular.module('editorapp', []).factory('editorwindow', function () {
+    var e;
+    e = new PreviewEditor({ editor: "editor", colorpicker: "#colorpicker", led_count: 12 });
+    return e;
+}).controller('FramesListController', FramesListController);
