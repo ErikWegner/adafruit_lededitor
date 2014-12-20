@@ -11,6 +11,14 @@ class Frame {
   delay: number
   dataUrl: string
   
+  public static htmlToRGB(html: string): string {
+    var p = [];
+    p.push("0x" + html[1] + html[2]);
+    p.push("0x" + html[3] + html[4]);
+    p.push("0x" + html[5] + html[6]);
+    return p.join(", ");
+  }
+  
   constructor(led_count: number) {
     this.colors = [];
     for (var i = 0; i < led_count; i++) {
@@ -40,6 +48,22 @@ class Frame {
       }
     }
     return r;
+  }
+  
+  public toSketch(intent: number) {
+    var s = "";
+    for (var i = 0; i < this.colors.length; i++) {
+      if (this.colors[i]) {
+        s += "  strip.setPixelColor(" + i + "," + Frame.htmlToRGB(this.colors[i]) + ");\n";
+      }
+    }
+    
+    s += "  strip.show();\n";
+    if (this.delay) {
+      s += "  delay(" + this.delay + ")\n";
+    }
+
+      return s;
   }
   
   public Rotate(step: number) {
@@ -288,6 +312,36 @@ class FramesListController {
     this.saveFrame();
     this.active_frame = a.$index;
     this.editorwindow.SetFrame(this.frameslist[this.active_frame]);
+  }
+  
+  buildSketchDlg() {
+    var sketchdata = this.buildSketch()
+    this.$scope["exportdata"] = sketchdata;
+    var dlg = this.ngDialog.open({ 
+      template: 'savejson',
+      className: 'ngdialog-theme-default',
+      scope: this.$scope
+    });
+  }
+  
+  buildSketch(): string {
+    var s = "";
+    s += "#include <Adafruit_NeoPixel.h>\n";
+    s += "#define PIXEL_PIN 11 // Digital IO pin connected to the NeoPixels.\n"
+    s += "#define PIXEL_COUNT 12\n"
+    s += "Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NEO_KHZ800);\n"
+    
+    s += "\nvoid setup() {\n"
+    s += "  strip.begin();\n  strip.show(); // Initialize all pixels to 'off'\n"
+    s += "}\n\n"
+    
+    s += "void loop() {\n"
+    for (var i in this.frameslist) {
+      s += this.frameslist[i].toSketch(2)
+    }
+    s += "}"
+    
+    return s
   }
   
   saveJSONDlg() {

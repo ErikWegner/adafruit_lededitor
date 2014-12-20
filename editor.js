@@ -7,6 +7,13 @@ var Frame = (function () {
             this.colors.push(null);
         }
     }
+    Frame.htmlToRGB = function (html) {
+        var p = [];
+        p.push("0x" + html[1] + html[2]);
+        p.push("0x" + html[3] + html[4]);
+        p.push("0x" + html[5] + html[6]);
+        return p.join(", ");
+    };
     Frame.prototype.fromObj = function (data) {
         if (data.delay) {
             this.delay = data.delay;
@@ -26,6 +33,19 @@ var Frame = (function () {
             }
         }
         return r;
+    };
+    Frame.prototype.toSketch = function (intent) {
+        var s = "";
+        for (var i = 0; i < this.colors.length; i++) {
+            if (this.colors[i]) {
+                s += "  strip.setPixelColor(" + i + "," + Frame.htmlToRGB(this.colors[i]) + ");\n";
+            }
+        }
+        s += "  strip.show();\n";
+        if (this.delay) {
+            s += "  delay(" + this.delay + ")\n";
+        }
+        return s;
     };
     Frame.prototype.Rotate = function (step) {
         var i;
@@ -219,6 +239,31 @@ var FramesListController = (function () {
         this.saveFrame();
         this.active_frame = a.$index;
         this.editorwindow.SetFrame(this.frameslist[this.active_frame]);
+    };
+    FramesListController.prototype.buildSketchDlg = function () {
+        var sketchdata = this.buildSketch();
+        this.$scope["exportdata"] = sketchdata;
+        var dlg = this.ngDialog.open({
+            template: 'savejson',
+            className: 'ngdialog-theme-default',
+            scope: this.$scope
+        });
+    };
+    FramesListController.prototype.buildSketch = function () {
+        var s = "";
+        s += "#include <Adafruit_NeoPixel.h>\n";
+        s += "#define PIXEL_PIN 11 // Digital IO pin connected to the NeoPixels.\n";
+        s += "#define PIXEL_COUNT 12\n";
+        s += "Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NEO_KHZ800);\n";
+        s += "\nvoid setup() {\n";
+        s += "  strip.begin();\n  strip.show(); // Initialize all pixels to 'off'\n";
+        s += "}\n\n";
+        s += "void loop() {\n";
+        for (var i in this.frameslist) {
+            s += this.frameslist[i].toSketch(2);
+        }
+        s += "}";
+        return s;
     };
     FramesListController.prototype.saveJSONDlg = function () {
         var exportdata = this.frameslistToJSON();

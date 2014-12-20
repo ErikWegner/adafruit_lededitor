@@ -45,6 +45,7 @@
               <button ng-click="vm.saveAndNextFrame()">Save and next</button>
               <button ng-click="vm.saveJSONDlg()">Export to JSON</button>
               <button ng-click="vm.loadJSONDlg()">Import from JSON</button>
+              <button ng-click="vm.buildSketchDlg()">Show sketch</button>
             </div>
             <div class="col-md-8">
               <div id="colorpicker" />
@@ -58,7 +59,7 @@
     
     <script type="text/ng-template" id="savejson">
     <h1>Take this:</h1>
-    <div class="well" style="word-wrap:break-word;">{{exportdata}}</div>
+    <div class="well" style="word-wrap:break-word;white-space:pre">{{exportdata}}</div>
     </script>
     
     <script type="text/ng-template" id="loadjson">
