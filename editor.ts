@@ -18,6 +18,20 @@ class Frame {
     }
   }
   
+  public fromObj(data: any): boolean {
+    if (data.delay) {
+      this.delay = data.delay;
+    }
+    
+    if (data.colors) {
+      for (var i in data.colors) {
+        this.colors[i] = data.colors[i];
+      }
+    }
+    
+    return true;
+  }
+  
   public toObj() {
     var r: any = {colors: {}, delay: this.delay}
     for (var i = 0; i < this.colors.length; i++) {
@@ -276,7 +290,7 @@ class FramesListController {
     this.editorwindow.SetFrame(this.frameslist[this.active_frame]);
   }
   
-  saveJSON() {
+  saveJSONDlg() {
     var exportdata = this.frameslistToJSON()
     this.$scope["exportdata"] = exportdata;
     var dlg = this.ngDialog.open({ 
@@ -295,6 +309,33 @@ class FramesListController {
     }
     
     return JSON.stringify(r);
+  }
+  
+  loadJSONDlg() {
+    this.$scope["importdata"] = "";
+    var dlg = this.ngDialog.open({ 
+      template: 'loadjson',
+      className: 'ngdialog-theme-default',
+      scope: this.$scope
+    });
+  }
+  
+  loadJSON(): boolean {
+    try {
+      var imported = JSON.parse(this.$scope["importdata"]);
+      if (imported.frames) {
+        for (var i in imported.frames) {
+          var importedframe = new Frame(imported.led_count);
+          importedframe.fromObj(imported.frames[i]);
+          this.frameslist.push(importedframe);
+        }
+        
+        return true;
+      }
+    } catch (e) {
+      alert("Error " + e.message);
+      return false;
+    }
   }
 }
 

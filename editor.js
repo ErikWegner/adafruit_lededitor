@@ -7,6 +7,17 @@ var Frame = (function () {
             this.colors.push(null);
         }
     }
+    Frame.prototype.fromObj = function (data) {
+        if (data.delay) {
+            this.delay = data.delay;
+        }
+        if (data.colors) {
+            for (var i in data.colors) {
+                this.colors[i] = data.colors[i];
+            }
+        }
+        return true;
+    };
     Frame.prototype.toObj = function () {
         var r = { colors: {}, delay: this.delay };
         for (var i = 0; i < this.colors.length; i++) {
@@ -209,7 +220,7 @@ var FramesListController = (function () {
         this.active_frame = a.$index;
         this.editorwindow.SetFrame(this.frameslist[this.active_frame]);
     };
-    FramesListController.prototype.saveJSON = function () {
+    FramesListController.prototype.saveJSONDlg = function () {
         var exportdata = this.frameslistToJSON();
         this.$scope["exportdata"] = exportdata;
         var dlg = this.ngDialog.open({
@@ -226,6 +237,31 @@ var FramesListController = (function () {
             r.frames.push(this.frameslist[i].toObj());
         }
         return JSON.stringify(r);
+    };
+    FramesListController.prototype.loadJSONDlg = function () {
+        this.$scope["importdata"] = "";
+        var dlg = this.ngDialog.open({
+            template: 'loadjson',
+            className: 'ngdialog-theme-default',
+            scope: this.$scope
+        });
+    };
+    FramesListController.prototype.loadJSON = function () {
+        try {
+            var imported = JSON.parse(this.$scope["importdata"]);
+            if (imported.frames) {
+                for (var i in imported.frames) {
+                    var importedframe = new Frame(imported.led_count);
+                    importedframe.fromObj(imported.frames[i]);
+                    this.frameslist.push(importedframe);
+                }
+                return true;
+            }
+        }
+        catch (e) {
+            alert("Error " + e.message);
+            return false;
+        }
     };
     // $inject annotation.
     // It provides $injector with information about dependencies to be injected into constructor
