@@ -78,7 +78,7 @@ class PreviewEditor {
   centers: Array<Point> = []
   led_radius = 20;
   led_border = 2;
-  led_off = '#000000';
+  led_off = null;
   
   active_led: number = 0;
 
@@ -116,7 +116,7 @@ class PreviewEditor {
   }
   
   public setActiveLedColor(htmlcolor: string) {
-    this.frame.colors[this.active_led] = htmlcolor;
+    this.frame.colors[this.active_led] = htmlcolor == "#0000ffff" ? null : htmlcolor;
     this.drawLed(this.active_led);
   }
   
@@ -125,7 +125,7 @@ class PreviewEditor {
   }
   
   private InitColorPicker(elementselector) {
-    $(elementselector).colorpicker({defaultPalette:'web'}).on('change.color', $.proxy(this.PalettePick, this));
+    $(elementselector).colorpicker({defaultPalette:'web',transparentColor: true}).on('change.color', $.proxy(this.PalettePick, this));
   }
 
   private InitEditor(canvasid) {
@@ -138,6 +138,20 @@ class PreviewEditor {
     if (this.canvas.getContext) {
       this.canvasctx = this.canvas.getContext('2d');
       this.canvasctx.clearRect(0, 0, this.width, this.height);
+
+      var pattern = document.createElement('canvas');
+      pattern.width = 20;
+      pattern.height = 20;
+      var pctx = pattern.getContext('2d');
+
+      pctx.fillStyle = "rgb(255, 255, 255)";
+      pctx.fillRect(10,0,10,10);
+      pctx.fillRect(0,10,10,10);
+      pctx.fillStyle = "rgb(188, 222, 178)";
+      pctx.fillRect(0,0,10,10);
+      pctx.fillRect(10,10,10,10);
+
+      this.led_off = this.canvasctx.createPattern(pattern, "repeat");
 
       var radius = this.width / 2 - this.led_radius - this.led_border;
       var centerX = this.width / 2;
@@ -228,7 +242,12 @@ class FramesListController {
     // 'vm' stands for 'view model'. We're adding a reference to the controller to the scope
     // for its methods to be accessible from view / HTML
     $scope.vm = this;
-    
+    this.resizeFrameslist();
+    $(window).on('resize', this.resizeFrameslist);
+  }
+  
+  resizeFrameslist() {
+    $('#frameslist').css({'max-height':window.innerHeight+'px', 'overflow-y':'scroll'});
   }
   
   rotateLeft() {

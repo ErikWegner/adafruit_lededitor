@@ -61,7 +61,7 @@ var PreviewEditor = (function () {
         this.centers = [];
         this.led_radius = 20;
         this.led_border = 2;
-        this.led_off = '#000000';
+        this.led_off = null;
         this.active_led = 0;
         this.frame = new Frame(o.led_count);
         this.InitEditor(o.editor);
@@ -88,14 +88,14 @@ var PreviewEditor = (function () {
         }
     };
     PreviewEditor.prototype.setActiveLedColor = function (htmlcolor) {
-        this.frame.colors[this.active_led] = htmlcolor;
+        this.frame.colors[this.active_led] = htmlcolor == "#0000ffff" ? null : htmlcolor;
         this.drawLed(this.active_led);
     };
     PreviewEditor.prototype.PalettePick = function (e, htmlcolor) {
         this.setActiveLedColor(htmlcolor);
     };
     PreviewEditor.prototype.InitColorPicker = function (elementselector) {
-        $(elementselector).colorpicker({ defaultPalette: 'web' }).on('change.color', $.proxy(this.PalettePick, this));
+        $(elementselector).colorpicker({ defaultPalette: 'web', transparentColor: true }).on('change.color', $.proxy(this.PalettePick, this));
     };
     PreviewEditor.prototype.InitEditor = function (canvasid) {
         this.canvas = document.getElementById(canvasid);
@@ -106,6 +106,17 @@ var PreviewEditor = (function () {
         if (this.canvas.getContext) {
             this.canvasctx = this.canvas.getContext('2d');
             this.canvasctx.clearRect(0, 0, this.width, this.height);
+            var pattern = document.createElement('canvas');
+            pattern.width = 20;
+            pattern.height = 20;
+            var pctx = pattern.getContext('2d');
+            pctx.fillStyle = "rgb(255, 255, 255)";
+            pctx.fillRect(10, 0, 10, 10);
+            pctx.fillRect(0, 10, 10, 10);
+            pctx.fillStyle = "rgb(188, 222, 178)";
+            pctx.fillRect(0, 0, 10, 10);
+            pctx.fillRect(10, 10, 10, 10);
+            this.led_off = this.canvasctx.createPattern(pattern, "repeat");
             var radius = this.width / 2 - this.led_radius - this.led_border;
             var centerX = this.width / 2;
             var centerY = this.height / 2;
@@ -171,7 +182,12 @@ var FramesListController = (function () {
         // 'vm' stands for 'view model'. We're adding a reference to the controller to the scope
         // for its methods to be accessible from view / HTML
         $scope.vm = this;
+        this.resizeFrameslist();
+        $(window).on('resize', this.resizeFrameslist);
     }
+    FramesListController.prototype.resizeFrameslist = function () {
+        $('#frameslist').css({ 'max-height': window.innerHeight + 'px', 'overflow-y': 'scroll' });
+    };
     FramesListController.prototype.rotateLeft = function () {
         this.editorwindow.Rotate(-1);
     };
