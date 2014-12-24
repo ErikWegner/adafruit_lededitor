@@ -54,16 +54,13 @@ class Frame {
     var s = "";
     for (var i = 0; i < this.colors.length; i++) {
       if (this.colors[i]) {
-        s += "  strip.setPixelColor(" + i + "," + Frame.htmlToRGB(this.colors[i]) + ");\n";
+        s += "  strip.setPixelColor(" + i + ", " + Frame.htmlToRGB(this.colors[i]) + ");\n";
       }
     }
     
     s += "  strip.show();\n";
-    if (this.delay) {
-      s += "  delay(" + this.delay + ")\n";
-    }
-
-      return s;
+    s += "  delay(" + (this.delay || "DEFAULT_DELAY") + ");\n"
+    return s;
   }
   
   public Rotate(step: number) {
@@ -329,6 +326,7 @@ class FramesListController {
     s += "#include <Adafruit_NeoPixel.h>\n";
     s += "#define PIXEL_PIN 11 // Digital IO pin connected to the NeoPixels.\n"
     s += "#define PIXEL_COUNT 12\n"
+    s += "#define DEFAULT_DELAY 100\n"
     s += "Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NEO_KHZ800);\n"
     
     s += "\nvoid setup() {\n"
